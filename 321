@@ -1,0 +1,17 @@
+# Transformer Encoder function
+def transformer_decoder(inputs, enc_output, head_size, num_heads, ff_dim, dropout=0):
+    x = layers.MultiHeadAttention(key_dim=head_size, num_heads=num_heads, dropout=dropout)(inputs, inputs)
+    x = layers.Dropout(dropout)(x)
+    x = layers.LayerNormalization(epsilon=1e-6)(x)
+    
+    x_attended = layers.MultiHeadAttention(key_dim=head_size, num_heads=num_heads, dropout=dropout)(x, enc_output)
+    x_attended = layers.Dropout(dropout)(x_attended)
+    x_attended = layers.LayerNormalization(epsilon=1e-6)(x_attended)
+    
+    res = x + x_attended
+    
+    x_ff = layers.Conv1D(filters=ff_dim, kernel_size=1, activation="relu")(res)
+    x_ff = layers.Dropout(dropout)(x_ff)
+    x_ff = layers.Conv1D(filters=inputs.shape[-1], kernel_size=1)(x_ff)
+    x_ff = layers.LayerNormalization(epsilon=1e-6)(x_ff)
+    return x + res
